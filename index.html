@@ -28,6 +28,10 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        .animate-slide-up { animation: slideUp 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -36,7 +40,6 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
         
-        // Icon Components using Lucide
         const Icon = ({ name, size = 20, color = "currentColor", className = "" }) => {
             useEffect(() => {
                 lucide.createIcons();
@@ -45,6 +48,206 @@
         };
 
         // --- DATA DEFINITIONS ---
+
+        const day2Data = {
+            date: "2026/02/02",
+            weekday: "週一",
+            weather: {
+                start: { location: "成田市", temp: "9°C / 1°C", condition: "晴時多雲", icon: "sun" },
+                end: { location: "水戶市", temp: "8°C / 0°C", condition: "多雲", icon: "cloud" }
+            },
+            schedule: [
+                {
+                    type: "start",
+                    time: "08:45",
+                    location: "東橫INN 成田機場新館",
+                    note: "辦理退房，搭乘接駁車或計程車前往租車點 (預抓15分移動)"
+                },
+                {
+                    type: "transport",
+                    from: "東橫INN",
+                    to: "Relax-Rent a Car",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Toyoko+Inn+Narita+Airport+Shinkan&destination=Relax+International+Car+Rental+Narita",
+                    distance: "1.2 km",
+                    estTimeBase: 5,
+                    bufferPercent: 2.0, 
+                    method: "飯店接駁 / 計程車",
+                    note: "請確認飯店接駁車時刻表，或直接搭計程車"
+                },
+                {
+                    type: "spot",
+                    arrival: "09:00",
+                    departure: "09:40",
+                    duration: 40,
+                    name: "Relax-Rent a Car レンタカー",
+                    jpName: "Relax International Rental Car",
+                    imageUrl: "https://placehold.co/800x400/e2e8f0/475569?text=Relax+Rent+a+Car",
+                    address: "千葉県成田市新田90-1",
+                    tags: ["租車", "取車"],
+                    description: "辦理取車手續。\n請準備：護照、台灣駕照、日文譯本。\n檢查車況（外觀刮痕、輪胎、油量）。確認 ETC 卡是否已插入。",
+                    price: "依預約單",
+                    parking: "店鋪內",
+                    note: "早晨成田周邊交通可能稍繁忙"
+                },
+                {
+                    type: "transport",
+                    from: "Relax-Rent a Car",
+                    to: "かに弥 (Kaniya)",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Relax+International+Car+Rental+Narita&destination=Kaniya+Oarai&avoid=t",
+                    distance: "75 km",
+                    estTimeBase: 120,
+                    bufferPercent: 1.1,
+                    method: "開車 (一般道路 - 國道51號)",
+                    note: "不走高速公路，沿國道51號行駛。車程較長，請注意沿途休息站。"
+                },
+                {
+                    type: "spot",
+                    arrival: "11:50",
+                    departure: "12:50",
+                    duration: 60,
+                    name: "かに弥 (Kaniya)",
+                    jpName: "かに弥",
+                    imageUrl: "https://placehold.co/800x400/e2e8f0/475569?text=Kaniya+Crab+Restaurant",
+                    address: "茨城県東茨城郡大洗町磯浜町8253-22",
+                    mapcode: "239 535 733*17",
+                    tags: ["午餐", "螃蟹料理", "大洗海鮮市場"],
+                    description: "位於大洗海鮮市場旁的螃蟹專賣食堂。以實惠價格提供螃蟹味噌湯、螃蟹飯等料理。亦可在一樓市場挑選海鮮。",
+                    price: "約 1000-2000円",
+                    parking: "市場免費停車場",
+                    note: "營業時間 09:00-16:00 (週三休)"
+                },
+                {
+                    type: "transport",
+                    from: "かに弥",
+                    to: "大洗磯前神社 神磯鳥居",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Kaniya+Oarai&destination=Kamiiso+no+Torii",
+                    distance: "2.5 km",
+                    estTimeBase: 6,
+                    bufferPercent: 1.5,
+                    method: "開車",
+                    note: "距離很近，沿海邊道路行駛"
+                },
+                {
+                    type: "spot",
+                    arrival: "13:00",
+                    departure: "13:30",
+                    duration: 30,
+                    name: "大洗磯前神社 神磯鳥居",
+                    jpName: "大洗磯前神社 神磯の鳥居",
+                    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Kamiiso_no_Torii.jpg/800px-Kamiiso_no_Torii.jpg",
+                    address: "茨城県東茨城郡大洗町磯浜町6890",
+                    mapcode: "239 536 575*06",
+                    tags: ["海上鳥居", "絕景", "少女與戰車"],
+                    description: "【神磯鳥居】矗立於太平洋岩礁上的白色鳥居。波濤洶湧的海浪拍打著鳥居，景象莊嚴。\n【大洗磯前神社】位於對面小山丘上，以保佑全家安全、生意興隆聞名。也是動畫《少女與戰車》的聖地。",
+                    price: "免費參拜",
+                    parking: "大洗公園停車場 (免費) 或 神社停車場",
+                    weatherWarning: "海邊風大，注意保暖"
+                },
+                {
+                    type: "transport",
+                    from: "神磯鳥居",
+                    to: "大洗水族館",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Kamiiso+no+Torii&destination=Aqua+World+Oarai",
+                    distance: "1.8 km",
+                    estTimeBase: 5,
+                    bufferPercent: 1.2,
+                    method: "開車"
+                },
+                {
+                    type: "spot",
+                    arrival: "13:40",
+                    departure: "16:00",
+                    duration: 140,
+                    name: "大洗水族館 Aqua World",
+                    jpName: "アクアワールド茨城県大洗水族館",
+                    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Aqua_World_Oarai.jpg/800px-Aqua_World_Oarai.jpg",
+                    address: "茨城県東茨城郡大洗町磯浜町8252-3",
+                    mapcode: "239 567 493*33",
+                    tags: ["日本第一鯊魚", "翻車魚", "海豚秀"],
+                    description: "關東最大規模水族館之一。\n1. 鯊魚展示數量日本第一 (約50種)。\n2. 擁有全日本最大的專用魚缸飼養翻車魚 (Manbo)。\n3. 海豚海獅表演 (請確認入場時的表演時刻表)。",
+                    price: "大人 2300円 / 中小學生 1100円",
+                    parking: "免費停車場 (750台)",
+                    note: "停留至 16:00 閉館前夕"
+                },
+                {
+                    type: "transport",
+                    from: "大洗水族館",
+                    to: "Montbell Hitachinaka",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Aqua+World+Oarai&destination=Montbell+Hitachinaka",
+                    distance: "5 km",
+                    estTimeBase: 10,
+                    bufferPercent: 1.5,
+                    method: "開車",
+                    note: "前往 Fashion Cruise 購物區"
+                },
+                {
+                    type: "spot",
+                    arrival: "16:15",
+                    departure: "17:00",
+                    duration: 45,
+                    name: "Montbell ひたちなか店",
+                    jpName: "モンベル ひたちなか店",
+                    imageUrl: "https://placehold.co/800x400/e2e8f0/475569?text=Montbell+Hitachinaka",
+                    address: "茨城県ひたちなか市新光町35 (Fashion Cruise旁)",
+                    tags: ["戶外用品", "購物", "免稅"],
+                    description: "位於大型購物中心區域的獨立店鋪。擁有兩層樓的寬敞賣場，商品齊全。適合補給接下來幾天前往雪地所需的裝備 (手套、帽子、發熱衣)。",
+                    price: "依消費",
+                    parking: "共用大型免費停車場",
+                    note: "營業時間 10:00-20:00"
+                },
+                {
+                    type: "transport",
+                    from: "Montbell",
+                    to: "Costco Hitachinaka",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Montbell+Hitachinaka&destination=Costco+Wholesale+Hitachinaka",
+                    distance: "0.5 km",
+                    estTimeBase: 3,
+                    bufferPercent: 1.5,
+                    method: "開車",
+                    note: "就在隔壁，車程極短"
+                },
+                {
+                    type: "spot",
+                    arrival: "17:05",
+                    departure: "18:35",
+                    duration: 90,
+                    name: "Costco Hitachinaka",
+                    jpName: "コストコホールセール ひたちなか倉庫店",
+                    imageUrl: "https://placehold.co/800x400/e2e8f0/475569?text=Costco+Hitachinaka",
+                    address: "茨城県ひたちなか市新光町41-2",
+                    tags: ["超市", "補給", "晚餐"],
+                    description: "大型美式賣場。建議在此採買旅程所需的飲料、零食、水果。晚餐可直接在熟食區解決 (熱狗、披薩) 或購買壽司回飯店。",
+                    price: "會員制 (需會員卡)",
+                    parking: "免費停車場 (858台)",
+                    note: "營業時間 10:00-20:00"
+                },
+                {
+                    type: "transport",
+                    from: "Costco",
+                    to: "Super Hotel Mito",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Costco+Wholesale+Hitachinaka&destination=Super+Hotel+Mito",
+                    distance: "11 km",
+                    estTimeBase: 22,
+                    bufferPercent: 1.2,
+                    method: "開車",
+                    note: "返回水戶市區"
+                },
+                {
+                    type: "hotel",
+                    arrival: "19:05",
+                    name: "スーパーホテル水戸 (Super Hotel)",
+                    jpName: "スーパーホテル水戸",
+                    imageUrl: "https://placehold.co/800x400/e2e8f0/475569?text=Super+Hotel+Mito",
+                    address: "茨城県水戸市泉町3-7-24",
+                    mapcode: "47 131 350*52",
+                    checkIn: "15:00~",
+                    description: "連鎖商務飯店，含天然溫泉「千波の湯」。",
+                    price: "已預訂",
+                    parking: "收費停車場 (先到先停)",
+                    note: "辦理 Check-in，休息"
+                }
+            ]
+        };
 
         const day3Data = {
             date: "2026/02/03",
@@ -77,6 +280,7 @@
                     duration: 90,
                     name: "偕樂園 (Kairakuen)",
                     jpName: "偕楽園",
+                    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Kairakuen_Mito_Ibaraki03bs4272.jpg/800px-Kairakuen_Mito_Ibaraki03bs4272.jpg",
                     address: "茨城県水戸市常磐町1-3-3",
                     mapcode: "47 130 357*31",
                     tags: ["日本三名園", "梅花祭", "好文亭"],
@@ -103,6 +307,7 @@
                     duration: 150,
                     name: "袋田瀑布 (Fukuroda Falls)",
                     jpName: "袋田の滝",
+                    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Fukuroda_Falls_in_winter.jpg/800px-Fukuroda_Falls_in_winter.jpg",
                     address: "茨城県久慈郡大子町袋田3-19",
                     mapcode: "379 664 695*88",
                     tags: ["日本三名瀑", "冰瀑", "戀人聖地"],
@@ -127,7 +332,8 @@
                     arrival: "16:45",
                     name: "蘆之牧溫泉 丸峰 (Marumine)",
                     jpName: "芦ノ牧温泉 丸峰",
-                    address: "福島県会津若松市大戸町大字芦ノ牧字下夕平1128",
+                    imageUrl: "https://placehold.co/800x400/e2e8f0/475569?text=Ashinomaki+Onsen+Marumine",
+                    address: "福島県會津若松市大戸町大字芦ノ牧字下夕平1128",
                     mapcode: "413 037 687*33",
                     checkIn: "15:00~",
                     description: "位於溪谷旁的溫泉旅館。擁有檜木露天風呂。晚餐為會席料理。",
@@ -168,6 +374,7 @@
                     duration: 150,
                     name: "大內宿 (Ouchijuku)",
                     jpName: "大内宿",
+                    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Ouchijuku_snow.jpg/800px-Ouchijuku_snow.jpg",
                     address: "福島県南会津郡下郷町大字大内",
                     mapcode: "433 524 624*33",
                     tags: ["茅草屋聚落", "日本三大茅葺屋", "大蔥蕎麥麵"],
@@ -193,6 +400,7 @@
                     duration: 90,
                     name: "會津若松城 / 鶴城 (Tsuruga Castle)",
                     jpName: "会津若松城 / 鶴ヶ城",
+                    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Tsurugajo_castle_in_winter.jpg/800px-Tsurugajo_castle_in_winter.jpg",
                     address: "福島県会津若松市追手町1-1",
                     mapcode: "97 261 460*66",
                     tags: ["百大名城", "紅瓦天守閣", "白虎隊"],
@@ -219,6 +427,7 @@
                     duration: 40,
                     name: "會津螺旋堂 (Sazaedo)",
                     jpName: "会津さざえ堂 (円通三匝堂)",
+                    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Aizu-Sazaedo02.jpg/800px-Aizu-Sazaedo02.jpg",
                     address: "福島県会津若松市一箕町八幡弁天下1404",
                     mapcode: "97 293 845*22",
                     tags: ["國家重要文化財", "雙螺旋構造", "奇異建築"],
@@ -241,6 +450,7 @@
                     arrival: "16:25",
                     name: "東山 Park Hotel 新風月",
                     jpName: "東山パークホテル 新風月",
+                    imageUrl: "https://placehold.co/800x400/e2e8f0/475569?text=Higashiyama+Park+Hotel",
                     address: "福島県会津若松市東山町大字湯本積り67",
                     mapcode: "97 265 831*33",
                     checkIn: "15:00~",
@@ -253,6 +463,7 @@
         };
 
         const daysMap = {
+            2: day2Data,
             3: day3Data,
             4: day4Data
         };
@@ -290,7 +501,7 @@
                                 >
                                     <span className="font-mono text-sm opacity-60">Day {d}</span>
                                     <span className="font-medium">
-                                        {d === 3 ? "2/03 (二)" : d === 4 ? "2/04 (三)" : "待規劃"}
+                                        {d === 2 ? "2/02 (一)" : d === 3 ? "2/03 (二)" : d === 4 ? "2/04 (三)" : "待規劃"}
                                     </span>
                                 </button>
                             );
@@ -317,7 +528,7 @@
                 <div className="w-full h-px bg-slate-200 md:hidden"></div>
 
                 <div className="flex items-center gap-4 w-full md:w-auto">
-                    <div className={`p-3 rounded-full ${end.condition.includes("雪") ? 'bg-blue-100 text-blue-600' : 'bg-blue-50 text-blue-600'}`}>
+                    <div className={`p-3 rounded-full ${end.condition.includes("雪") ? 'bg-blue-100 text-blue-600' : (end.condition.includes("雨") ? 'bg-gray-100 text-gray-600' : 'bg-blue-50 text-blue-600')}`}>
                         <Icon name={end.icon} size={24} />
                     </div>
                     <div>
@@ -327,7 +538,7 @@
                     </div>
                 </div>
                 <div className="text-xs text-slate-400 bg-slate-50 px-3 py-2 rounded">
-                    ⚠️ 冬季山區氣候多變，請隨時注意路況。
+                    ⚠️ 數據來源：tenki.jp 歷年同期平均氣候模擬。
                 </div>
             </div>
         );
@@ -381,6 +592,27 @@
                     <div className={`absolute left-4 top-8 w-4 h-4 rounded-full border-4 border-slate-50 z-10 ${isHotel ? 'bg-indigo-500' : 'bg-emerald-500'}`}></div>
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         <div className={`h-2 w-full ${isHotel ? 'bg-indigo-500' : 'bg-emerald-500'}`}></div>
+                        
+                        {/* Image Section */}
+                        {data.imageUrl && (
+                            <div className="relative h-48 w-full bg-slate-100 overflow-hidden group">
+                                <img 
+                                    src={data.imageUrl} 
+                                    alt={data.name} 
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-60"></div>
+                                <a 
+                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.jpName || data.name)}`}
+                                    target="_blank"
+                                    className="absolute bottom-3 right-3 bg-white/90 hover:bg-white text-slate-800 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors shadow-sm font-medium z-10"
+                                >
+                                    <Icon name="image" size={14} />
+                                    查看 Google Maps 照片
+                                </a>
+                            </div>
+                        )}
+
                         <div className="p-5">
                             <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
                                 <div>
@@ -471,7 +703,7 @@
         );
 
         const App = () => {
-            const [currentDay, setCurrentDay] = useState(4);
+            const [currentDay, setCurrentDay] = useState(2);
             const data = daysMap[currentDay];
             const contentRef = useRef(null);
 
@@ -513,7 +745,7 @@
                         </div>
 
                         <footer className="mt-4 text-center text-slate-400 text-sm pb-8 border-t border-slate-200 pt-8">
-                            此行程表時間已包含 +10% ~ 20% 交通緩衝。會津若松冬季易塞車，時間僅供參考。
+                            此行程表時間已包含 +10% ~ 20% 交通緩衝。請根據當日實際路況與天氣調整。
                         </footer>
                     </main>
                 </div>
