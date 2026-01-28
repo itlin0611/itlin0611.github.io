@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026東北家族旅遊 - 行程總覽</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
+        .timeline-line {
+            position: absolute;
+            left: 24px;
+            top: 40px;
+            bottom: 0;
+            width: 2px;
+            background-color: #e5e7eb;
+            z-index: 0;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        // Icon Components using Lucide
+        const Icon = ({ name, size = 20, color = "currentColor", className = "" }) => {
+            useEffect(() => {
+                lucide.createIcons();
+            }, [name]);
+            return <i data-lucide={name} width={size} height={size} stroke={color} className={className}></i>;
+        };
+
+        // --- DATA DEFINITIONS ---
+
+        const day3Data = {
+            date: "2026/02/03",
+            weekday: "週二",
+            weather: {
+                start: { location: "水戶市", temp: "8.5°C / -1.2°C", condition: "晴時多雲", icon: "sun" },
+                end: { location: "會津若松", temp: "2.8°C / -3.5°C", condition: "雪 (強風注意)", icon: "snowflake" }
+            },
+            schedule: [
+                {
+                    type: "start",
+                    time: "08:30",
+                    location: "スーパーホテル水戸 (Super Hotel Mito)",
+                    note: "辦理退房，確認行李上車"
+                },
+                {
+                    type: "transport",
+                    from: "スーパーホテル水戸",
+                    to: "偕樂園",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Super+Hotel+Mito&destination=Kairakuen+Ibaraki",
+                    distance: "3.5 km",
+                    estTimeBase: 15,
+                    bufferPercent: 1.1,
+                    method: "開車"
+                },
+                {
+                    type: "spot",
+                    arrival: "08:50",
+                    departure: "10:20",
+                    duration: 90,
+                    name: "偕樂園 (Kairakuen)",
+                    jpName: "偕楽園",
+                    address: "茨城県水戸市常磐町1-3-3",
+                    mapcode: "47 130 357*31",
+                    tags: ["日本三名園", "梅花祭", "好文亭"],
+                    description: "【日本三名園之一】與金澤兼六園、岡山後樂園並列。由水戶藩第九代藩主德川齊昭公親自設計，意在與民同樂。\n\n● 必看重點：\n1. 梅林：園內種植約100種、3000株梅花。2月初為「早開梅」賞期，紅白梅花交錯，香氣撲鼻。\n2. 好文亭 (需另付費200円)：木造的三層樓建築，可從三樓俯瞰千波湖與整片梅林，視野極佳。\n3. 孟宗竹林：高聳入雲的綠色竹林，營造出幽靜禪意，與梅林的熱鬧形成對比。",
+                    price: "入園 300円 / 好文亭 200円",
+                    parking: "偕樂園下駐車場 (500円)",
+                    weatherWarning: "戶外空曠風大，請務必戴帽子與圍巾保暖。"
+                },
+                {
+                    type: "transport",
+                    from: "偕樂園",
+                    to: "袋田瀑布",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Kairakuen+Ibaraki&destination=Fukuroda+Falls",
+                    distance: "55 km",
+                    estTimeBase: 70, 
+                    bufferPercent: 1.1, 
+                    method: "開車 (國道118號)",
+                    note: "路程稍長，建議使用洗手間後出發"
+                },
+                {
+                    type: "spot",
+                    arrival: "11:45",
+                    departure: "14:15",
+                    duration: 150,
+                    name: "袋田瀑布 (Fukuroda Falls)",
+                    jpName: "袋田の滝",
+                    address: "茨城県久慈郡大子町袋田3-19",
+                    mapcode: "379 664 695*88",
+                    tags: ["日本三名瀑", "冰瀑", "戀人聖地"],
+                    description: "【日本三名瀑之一】高120公尺、寬73公尺，瀑布水流分四段落下，故又名「四度之瀧」。\n\n● 冬季限定絕景 - 冰瀑 (Hyobaku)：\n嚴冬時期 (1-2月)，整座瀑布會因低溫而結凍，形成壯觀的白色冰壁。若運氣好遇到完全結冰，甚至能看到攀冰愛好者在瀑布上攀爬。\n\n● 參觀動線：\n需購票進入觀瀑隧道，隧道內有兩處觀景台。第一觀景台可近距離仰望瀑布，第二觀景台需搭乘電梯上去，可俯瞰瀑布全貌與愛心形狀的觀景台。",
+                    price: "隧道利用料 大人300円 / 兒童150円",
+                    parking: "町營免費停車場 (步行約10-15分) 或 私人收費停車場 (500円, 較近)",
+                    weatherWarning: "山區氣溫極低，地面與隧道口易結冰，請穿著防滑鞋。"
+                },
+                {
+                    type: "transport",
+                    from: "袋田瀑布",
+                    to: "蘆之牧溫泉 丸峰",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Fukuroda+Falls&destination=Ashinomaki+Onsen+Marumine",
+                    distance: "105 km",
+                    estTimeBase: 130, 
+                    bufferPercent: 1.1, 
+                    method: "開車 (國道118號 -> 121號)",
+                    note: "進入會津山區，高機率積雪/路面凍結，務必配置雪胎，小心駕駛"
+                },
+                {
+                    type: "hotel",
+                    arrival: "16:45",
+                    name: "蘆之牧溫泉 丸峰 (Marumine)",
+                    jpName: "芦ノ牧温泉 丸峰",
+                    address: "福島県会津若松市大戸町大字芦ノ牧字下夕平1128",
+                    mapcode: "413 037 687*33",
+                    checkIn: "15:00~",
+                    description: "位於溪谷旁的溫泉旅館。擁有檜木露天風呂。晚餐為會席料理。",
+                    price: "已預訂 (請確認訂房代號)",
+                    parking: "飯店專用停車場 (免費)"
+                }
+            ]
+        };
+
+        const day4Data = {
+            date: "2026/02/04",
+            weekday: "週三",
+            weather: {
+                start: { location: "蘆之牧溫泉", temp: "-1°C / -6°C", condition: "多雲時雪", icon: "cloud-snow" },
+                end: { location: "會津若松市", temp: "1°C / -4°C", condition: "雪", icon: "snowflake" }
+            },
+            schedule: [
+                {
+                    type: "start",
+                    time: "10:00",
+                    location: "蘆之牧溫泉 丸峰",
+                    note: "享用完早餐後悠閒出發"
+                },
+                {
+                    type: "transport",
+                    from: "蘆之牧溫泉 丸峰",
+                    to: "大內宿",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Ashinomaki+Onsen+Marumine&destination=Ouchijuku",
+                    distance: "14 km",
+                    estTimeBase: 22, 
+                    bufferPercent: 1.15,
+                    method: "開車"
+                },
+                {
+                    type: "spot",
+                    arrival: "10:25",
+                    departure: "12:55",
+                    duration: 150,
+                    name: "大內宿 (Ouchijuku)",
+                    jpName: "大内宿",
+                    address: "福島県南会津郡下郷町大字大内",
+                    mapcode: "433 524 624*33",
+                    tags: ["茅草屋聚落", "日本三大茅葺屋", "大蔥蕎麥麵"],
+                    description: "【國家重要傳統建造物群保存地區】\n與白川鄉合掌村、京都美山町並列。保留了江戶時代宿場町的風貌，街道兩旁排列著30多間茅草屋頂的民家。\n\n● 冬季亮點：\n白雪覆蓋在厚厚的茅草屋頂上，彷彿童話世界。街道盡頭的高地可以俯瞰全景，是攝影愛好者必去的拍攝點。\n\n● 午餐推薦：\n必吃名物「大蔥蕎麥麵」(Negi-soba)。特色是用一整根長蔥當作筷子撈麵吃，吃的時候可以咬一口蔥配麵，嗆辣鮮甜。",
+                    price: "免費入村",
+                    parking: "收費停車場 (500円)",
+                    weatherWarning: "地面可能非常滑，建議穿著雪靴或冰爪。"
+                },
+                {
+                    type: "transport",
+                    from: "大內宿",
+                    to: "會津若松城 (鶴ヶ城)",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Ouchijuku&destination=Tsuruga+Castle",
+                    distance: "30 km",
+                    estTimeBase: 45, 
+                    bufferPercent: 1.1, 
+                    method: "開車"
+                },
+                {
+                    type: "spot",
+                    arrival: "13:45",
+                    departure: "15:15",
+                    duration: 90,
+                    name: "會津若松城 / 鶴城 (Tsuruga Castle)",
+                    jpName: "会津若松城 / 鶴ヶ城",
+                    address: "福島県会津若松市追手町1-1",
+                    mapcode: "97 261 460*66",
+                    tags: ["百大名城", "紅瓦天守閣", "白虎隊"],
+                    description: "【東日本唯一的紅瓦天守閣】\n這座城堡是會津若松的象徵，也是戊辰戰爭中激戰的舞台。五層樓的天守閣內部為博物館，展示會津藩的歷史文物。\n\n● 參觀重點：\n1. 紅瓦：全日本唯一使用紅瓦的天守閣，在雪地中紅色的屋瓦顯得格外醒目。\n2. 茶室「麟閣」：位於城廓內，據說是由千利休之子少庵所建。",
+                    price: "天守閣入場 大人410円 / 小孩150円",
+                    parking: "西出丸停車場 (200円/時)",
+                    weatherWarning: "登城路面可能有殘雪"
+                },
+                {
+                    type: "transport",
+                    from: "會津若松城",
+                    to: "会津さざえ堂 (螺旋堂)",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Tsuruga+Castle&destination=Aizu+Sazaedo",
+                    distance: "2.5 km",
+                    estTimeBase: 10, 
+                    bufferPercent: 1.2, 
+                    method: "開車",
+                    note: "市區短程移動，注意紅綠燈"
+                },
+                {
+                    type: "spot",
+                    arrival: "15:30", 
+                    departure: "16:10",
+                    duration: 40,
+                    name: "會津螺旋堂 (Sazaedo)",
+                    jpName: "会津さざえ堂 (円通三匝堂)",
+                    address: "福島県会津若松市一箕町八幡弁天下1404",
+                    mapcode: "97 293 845*22",
+                    tags: ["國家重要文化財", "雙螺旋構造", "奇異建築"],
+                    description: "【世界罕見的雙螺旋木造建築】\n位於飯盛山，正式名稱為「圓通三匝堂」。\n\n● 建築奇蹟：\n雖為木造建築，但內部構造為雙螺旋樓梯。參拜者沿著斜坡往上走，回程則是另一條路往下，上下遊客完全不會相遇，是非常奇特且具巧思的設計。",
+                    price: "大人400円 / 大學生300円 / 小孩200円",
+                    parking: "飯盛山觀光客專用停車場 (步行需爬樓梯)"
+                },
+                {
+                    type: "transport",
+                    from: "会津さざえ堂",
+                    to: "東山パークホテル 新風月",
+                    googleMapUrl: "https://www.google.com/maps/dir/?api=1&origin=Aizu+Sazaedo&destination=Higashiyama+Park+Hotel+Shinpugetsu",
+                    distance: "3.5 km",
+                    estTimeBase: 12, 
+                    bufferPercent: 1.1, 
+                    method: "開車"
+                },
+                {
+                    type: "hotel",
+                    arrival: "16:25",
+                    name: "東山 Park Hotel 新風月",
+                    jpName: "東山パークホテル 新風月",
+                    address: "福島県会津若松市東山町大字湯本積り67",
+                    mapcode: "97 265 831*33",
+                    checkIn: "15:00~",
+                    description: "位於東山溫泉鄉，擁有自家源泉的溫泉飯店。大浴場可眺望溪谷美景。",
+                    price: "一泊二食",
+                    parking: "飯店專用停車場 (免費)",
+                    note: "如果需要採買零食，建議在進飯店前先去超市 (如: リオン･ドール 滝沢店)"
+                }
+            ]
+        };
+
+        const daysMap = {
+            3: day3Data,
+            4: day4Data
+        };
+
+        // --- COMPONENT LOGIC ---
+
+        const calculateBufferedTime = (baseTime, buffer) => {
+            const raw = baseTime * buffer;
+            return Math.ceil(raw / 5) * 5;
+        };
+
+        const Sidebar = ({ currentDay, setDay }) => {
+            const days = Array.from({ length: 11 }, (_, i) => i + 1);
+            return (
+                <div className="w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 h-auto md:h-screen overflow-y-auto z-50">
+                    <div className="p-6 font-bold text-white text-xl flex items-center gap-2 sticky top-0 bg-slate-900 z-10">
+                        <Icon name="map" size={24} />
+                        東北家族旅遊
+                    </div>
+                    <nav className="flex md:flex-col overflow-x-auto md:overflow-visible hide-scrollbar pb-4 md:pb-0">
+                        {days.map(d => {
+                            const hasData = daysMap[d];
+                            return (
+                                <button 
+                                    key={d}
+                                    onClick={() => hasData && setDay(d)}
+                                    disabled={!hasData}
+                                    className={`flex items-center gap-3 px-6 py-4 text-left whitespace-nowrap transition-colors border-l-4 
+                                        ${d === currentDay 
+                                            ? 'bg-blue-600 text-white border-blue-400' 
+                                            : hasData 
+                                                ? 'hover:bg-slate-800 border-transparent cursor-pointer' 
+                                                : 'opacity-40 border-transparent cursor-not-allowed'
+                                        }`}
+                                >
+                                    <span className="font-mono text-sm opacity-60">Day {d}</span>
+                                    <span className="font-medium">
+                                        {d === 3 ? "2/03 (二)" : d === 4 ? "2/04 (三)" : "待規劃"}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </nav>
+                </div>
+            );
+        };
+
+        const WeatherWidget = ({ start, end }) => (
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row gap-4 justify-between items-center animate-fade-in">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    <div className={`p-3 rounded-full ${start.condition.includes("雪") ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                        <Icon name={start.icon} size={24} />
+                    </div>
+                    <div>
+                        <div className="text-xs text-slate-500">出發地氣象 ({start.location})</div>
+                        <div className="font-bold text-slate-800">{start.temp}</div>
+                        <div className="text-sm text-slate-600">{start.condition}</div>
+                    </div>
+                </div>
+                
+                <div className="hidden md:block h-10 w-px bg-slate-200"></div>
+                <div className="w-full h-px bg-slate-200 md:hidden"></div>
+
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    <div className={`p-3 rounded-full ${end.condition.includes("雪") ? 'bg-blue-100 text-blue-600' : 'bg-blue-50 text-blue-600'}`}>
+                        <Icon name={end.icon} size={24} />
+                    </div>
+                    <div>
+                        <div className="text-xs text-slate-500">目的地氣象 ({end.location})</div>
+                        <div className="font-bold text-slate-800">{end.temp}</div>
+                        <div className="text-sm text-slate-600">{end.condition}</div>
+                    </div>
+                </div>
+                <div className="text-xs text-slate-400 bg-slate-50 px-3 py-2 rounded">
+                    ⚠️ 冬季山區氣候多變，請隨時注意路況。
+                </div>
+            </div>
+        );
+
+        const TransportCard = ({ data }) => {
+            const bufferedTime = calculateBufferedTime(data.estTimeBase, data.bufferPercent);
+            return (
+                <div className="relative pl-12 py-4 animate-slide-up">
+                    <div className="absolute left-[21px] top-1/2 -translate-y-1/2 bg-slate-200 rounded-full p-1.5 z-10 border-4 border-slate-50">
+                        <Icon name="car" size={16} className="text-slate-600" />
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 hover:border-blue-300 transition-colors group">
+                        <div className="flex flex-col md:flex-row justify-between md:items-center gap-3">
+                            <div>
+                                <div className="text-sm font-semibold text-slate-600 flex items-center gap-2">
+                                    <span className="bg-slate-200 px-2 py-0.5 rounded text-xs text-slate-700">移動</span>
+                                    {data.method}
+                                </div>
+                                <div className="text-xs text-slate-500 mt-1">
+                                    預估 {data.estTimeBase} 分 + 緩衝 {(bufferedTime - data.estTimeBase)} 分
+                                </div>
+                                {data.note && (
+                                    <div className="text-xs text-amber-600 mt-1 font-medium flex items-center gap-1">
+                                        <Icon name="alert-circle" size={12} />
+                                        {data.note}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="text-right">
+                                <div className="font-mono text-lg font-bold text-slate-700">{bufferedTime} <span className="text-sm font-normal text-slate-500">分鐘</span></div>
+                                <div className="text-xs text-slate-500">{data.distance}</div>
+                            </div>
+                            <a 
+                                href={data.googleMapUrl} 
+                                target="_blank"
+                                className="flex items-center justify-center gap-2 bg-white border border-slate-300 hover:bg-blue-50 hover:text-blue-600 text-slate-700 px-4 py-2 rounded text-sm font-medium transition-colors shadow-sm"
+                            >
+                                <Icon name="map-pin" size={16} />
+                                導航
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const SpotCard = ({ data }) => {
+            const isHotel = data.type === 'hotel';
+            return (
+                <div className="relative pl-12 py-6 animate-slide-up">
+                    <div className={`absolute left-4 top-8 w-4 h-4 rounded-full border-4 border-slate-50 z-10 ${isHotel ? 'bg-indigo-500' : 'bg-emerald-500'}`}></div>
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className={`h-2 w-full ${isHotel ? 'bg-indigo-500' : 'bg-emerald-500'}`}></div>
+                        <div className="p-5">
+                            <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
+                                <div>
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <span className="font-mono text-2xl font-bold text-slate-800">{data.arrival}</span>
+                                        {data.departure && (
+                                            <span className="text-sm text-slate-400 font-mono bg-slate-100 px-2 py-1 rounded">
+                                                停留 {data.duration} 分
+                                            </span>
+                                        )}
+                                    </div>
+                                    <h3 className="text-xl font-bold text-slate-900">{data.name}</h3>
+                                    <div className="text-sm text-slate-500 font-medium">{data.jpName}</div>
+                                </div>
+                                {data.tags && (
+                                    <div className="flex gap-2 flex-wrap justify-end">
+                                        {data.tags.map(tag => (
+                                            <span key={tag} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full border border-slate-200">
+                                                #{tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                                <div className="space-y-3">
+                                    <div className="p-3 bg-slate-50 rounded-lg text-slate-700 leading-relaxed border border-slate-100 whitespace-pre-line">
+                                        {data.description}
+                                    </div>
+                                    {data.weatherWarning && (
+                                        <div className="flex items-center gap-2 text-amber-700 bg-amber-50 px-3 py-2 rounded text-xs border border-amber-100">
+                                            <Icon name="thermometer-snowflake" size={14} />
+                                            {data.weatherWarning}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="space-y-2">
+                                    {data.address && (
+                                        <div className="flex items-start gap-2">
+                                            <Icon name="map" size={16} className="text-slate-400 mt-0.5" />
+                                            <span className="text-slate-600 select-all">{data.address}</span>
+                                        </div>
+                                    )}
+                                    {data.mapcode && (
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="navigation" size={16} className="text-slate-400" />
+                                            <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700 select-all font-bold">
+                                                MC: {data.mapcode}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {data.price && (
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="ticket" size={16} className="text-slate-400" />
+                                            <span className="text-slate-600">{data.price}</span>
+                                        </div>
+                                    )}
+                                    {data.parking && (
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="parking-circle" size={16} className="text-slate-400" />
+                                            <span className="text-slate-600">{data.parking}</span>
+                                        </div>
+                                    )}
+                                    {data.note && (
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="info" size={16} className="text-slate-400" />
+                                            <span className="text-amber-600">{data.note}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const StartNode = ({ data }) => (
+            <div className="relative pl-12 pb-6 animate-slide-up">
+                <div className="absolute left-4 top-1 w-4 h-4 rounded-full bg-slate-800 border-4 border-slate-50 z-10"></div>
+                <div>
+                    <div className="font-mono text-xl font-bold text-slate-800">{data.time}</div>
+                    <div className="text-lg font-bold text-slate-900">{data.location}</div>
+                    <div className="text-sm text-slate-500">{data.note}</div>
+                </div>
+            </div>
+        );
+
+        const App = () => {
+            const [currentDay, setCurrentDay] = useState(4);
+            const data = daysMap[currentDay];
+            const contentRef = useRef(null);
+
+            useEffect(() => {
+                lucide.createIcons();
+                // Scroll top when day changes
+                if(contentRef.current) {
+                    contentRef.current.scrollTop = 0;
+                }
+                window.scrollTo(0, 0);
+            }, [currentDay]);
+
+            return (
+                <div className="flex flex-col md:flex-row min-h-screen">
+                    <Sidebar currentDay={currentDay} setDay={setCurrentDay} />
+                    
+                    <main className="flex-1 p-4 md:p-8 max-w-4xl mx-auto w-full" ref={contentRef}>
+                        <header className="mb-8 border-b border-slate-200 pb-4">
+                            <div className="flex justify-between items-end mb-2">
+                                <h1 className="text-3xl font-bold text-slate-900">Day {currentDay}</h1>
+                                <div className="text-right">
+                                    <div className="text-2xl font-mono text-slate-800">{data.date}</div>
+                                    <div className="text-slate-500 font-medium">{data.weekday}</div>
+                                </div>
+                            </div>
+                        </header>
+
+                        <WeatherWidget start={data.weather.start} end={data.weather.end} />
+
+                        <div className="relative mt-8 pb-10">
+                            <div className="timeline-line"></div>
+                            
+                            {data.schedule.map((item, index) => {
+                                if (item.type === 'start') return <StartNode key={index} data={item} />;
+                                if (item.type === 'transport') return <TransportCard key={index} data={item} />;
+                                if (item.type === 'spot' || item.type === 'hotel') return <SpotCard key={index} data={item} />;
+                                return null;
+                            })}
+                        </div>
+
+                        <footer className="mt-4 text-center text-slate-400 text-sm pb-8 border-t border-slate-200 pt-8">
+                            此行程表時間已包含 +10% ~ 20% 交通緩衝。會津若松冬季易塞車，時間僅供參考。
+                        </footer>
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
